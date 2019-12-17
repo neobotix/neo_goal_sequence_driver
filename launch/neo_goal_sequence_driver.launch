@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+	<node pkg="neo_goal_sequence_driver" type="goal_sequence_driver_server.py" name="neo_goal_sequence_driver_server" output="screen">
+	</node>
+	<node pkg="neo_goal_sequence_driver" type="goal_sequence_visualizer.py" name="neo_goal_sequence_visualizer" output="screen">
+	</node>
+</launch>
