@@ -1,4 +1,4 @@
 config_parameters:
   print_option: all     # optional: local/total/all
-  infi_param: true     # optional: true/false, when set to true: robot will repeat the goal list
-  patience: 5.0         # time length wait for response of actionserver
+  infi_param: false     # optional: true/false, when set to true: robot will repeat the goal list
+  patience: 30         # time length wait for response of actionserver

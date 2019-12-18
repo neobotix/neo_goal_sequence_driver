@@ -60,6 +60,7 @@ def load_from_yaml():
 
 	global print_option
 	global infi_param
+	global patience
 	global goal_list
 	global driver_config
 	goals = None
@@ -100,6 +101,7 @@ def load_from_yaml():
 		patience = config_params['config_parameters']['patience']
 		print("print_option is:"+print_option)
 		print("infi_param is:"+str(infi_param))
+		print("patience is:"+str(patience))
 	except:
 
 		rospy.loginfo("Some parameters are not set, applying default values.")
@@ -182,7 +184,7 @@ def goal_sequence_driver_run(cmd):
 			except:
 				if(i != 0):
 
-					rospy.loginfo("All goals reached, sequence drive task completed.")
+					rospy.loginfo("All goals checked, sequence drive task completed.")
 
 				else:
 
@@ -198,6 +200,8 @@ def goal_sequence_driver_run(cmd):
 					pose = create_quaternion(i, mat)
 			goal = create_goal(pose)
 			client.send_goal(goal)
+			# for test
+			rospy.loginfo("Goal sent to action server.")
 			while(not rospy.is_shutdown()):
 
 				if(client.wait_for_result(rospy.Duration.from_sec(patience)) == True):
@@ -207,6 +211,11 @@ def goal_sequence_driver_run(cmd):
 
 						rospy.loginfo("Current task duration:"+str(rospy.get_time() - current_task_start)+"s")						
 					time.sleep(1)
+					break
+				else:
+					# for test
+					print(patience)
+					rospy.loginfo("Out of patience, moving on to next!")
 					break
 			i += 1
 		rospy.set_param(occupied, False)
