@@ -13,9 +13,12 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from neo_goal_sequence_driver.srv import command, commandResponse
 
 # global variables
+# default set for config parameters, and
+# will be applied in non-service mode
 print_option = "all"
 infi_param = False
 patience = 5.0
+
 dist = 0.0
 time_start = None
 former_pose = None
@@ -23,7 +26,6 @@ smallest_step_length = 0.000002
 pkg_name = 'neo_goal_sequence_driver'
 switch = pkg_name+'/switch'
 occupied = pkg_name+'/occupied'
-mat = []
 
 # service option
 service_called = True
@@ -103,6 +105,7 @@ def load_from_yaml():
 		rospy.loginfo("Some parameters are not set, applying default values.")
 	return mat_goals
 
+mat = load_from_yaml()
 
 # transformation of data: euler -> quaternion
 def create_quaternion(goal_num, mat):
@@ -170,7 +173,7 @@ def goal_sequence_driver_run(cmd):
 
 			rospy.loginfo("Client server up.")
 		i = 0
-		mat = load_from_yaml()
+		#mat = load_from_yaml()
 		while(not rospy.is_shutdown() and rospy.get_param(switch)):
 
 			try:
@@ -186,17 +189,20 @@ def goal_sequence_driver_run(cmd):
 					rospy.loginfo("Process died of unknown reason.")
 					rospy.set_param(occupied, False)
 					return "Service failed."
-				i = 0
 				if(infi_param != True):
 
 					break
+				else:
+
+					i = 0
+					pose = create_quaternion(i, mat)
 			goal = create_goal(pose)
 			client.send_goal(goal)
 			while(not rospy.is_shutdown()):
 
 				if(client.wait_for_result(rospy.Duration.from_sec(patience)) == True):
 
-					rospy.loginfo("Goal reached.")
+					rospy.loginfo("Goal reached: "+str(mat[i]))
 					if(print_option == "all" or print_option == "local"):
 
 						rospy.loginfo("Current task duration:"+str(rospy.get_time() - current_task_start)+"s")						
@@ -224,6 +230,8 @@ if __name__ == '__main__':
 	if(service_called):
 
 		goal_sequence_driver_server()
+		if(rospy.is_shutdown()):
+			rospy.set_param(occupied, False)
 
 	else:
 

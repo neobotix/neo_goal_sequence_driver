@@ -4,4 +4,4 @@ goals:
   goal_3: {X: 1.0, Y: 2.0, theta: 90.0}
   goal_4: {X: 2.0, Y: 2.0, theta: 0.0}
   goal_5: {X: 3.0, Y: 2.0, theta: 90.0}
-# goal_6: {X: 4.0, Y: 2.0, theta: 0.0}
+  goal_6: {X: 4.0, Y: 2.0, theta: 0.0}

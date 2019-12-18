@@ -17,7 +17,6 @@ def goal_sequence_visualizer(mat):
 	pose_array = PoseArray()
 	pose_array.header.seq = 1
 	pose_array.header.frame_id = "/map"
-	print(mat)
 	for i in range(np.shape(mat)[0]):
 
 		pose = Pose()
@@ -29,11 +28,20 @@ def goal_sequence_visualizer(mat):
 		pose.orientation.z = quaternion[2]
 		pose.orientation.w = quaternion[3]
 		pose_array.poses.append(pose)
-	while(not rospy.is_shutdown() and rospy.get_param(server.occupied)):
 
-		pub.publish(pose_array)
-		rate.sleep()
+	try:
+
+		oc = rospy.get_param(server.occupied)
+		while(oc):
+
+			pub.publish(pose_array)
+			rate.sleep()
+	except:
+
+		pass
+
 
 if __name__ == '__main__':
 
-	goal_sequence_visualizer(server.mat)
+	while(not rospy.is_shutdown()):
+		goal_sequence_visualizer(server.mat)
