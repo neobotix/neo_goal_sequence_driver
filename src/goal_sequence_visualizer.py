@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import time
 import rospy
 import numpy as np
 import goal_sequence_driver_server as server
@@ -7,9 +8,8 @@ import goal_sequence_driver_server as server
 from tf.transformations import quaternion_from_euler
 from geometry_msgs.msg import Pose, PoseArray, Quaternion
 
-
 # visualizer of goals in form of axes
-def goal_sequence_visualizer(mat):
+def init_goal_sequence_visualizer(mat):
 
 	rospy.init_node('neo_goal_sequence_visualizer')
 	rate = rospy.Rate(5)
@@ -28,20 +28,14 @@ def goal_sequence_visualizer(mat):
 		pose.orientation.z = quaternion[2]
 		pose.orientation.w = quaternion[3]
 		pose_array.poses.append(pose)
-
-	try:
-
-		oc = rospy.get_param(server.occupied)
-		while(oc):
-
-			pub.publish(pose_array)
-			rate.sleep()
-	except:
-
-		pass
-
+	#	pub.publish(pose_array)
+	#	rate.sleep()
+	return pub, rate, pose_array
 
 if __name__ == '__main__':
 
+	pub, rate, pose_array =	init_goal_sequence_visualizer(server.mat)
 	while(not rospy.is_shutdown()):
-		goal_sequence_visualizer(server.mat)
+
+		pub.publish(pose_array)
+		rate.sleep()
