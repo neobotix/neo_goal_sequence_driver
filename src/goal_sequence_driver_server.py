@@ -75,15 +75,13 @@ def load_from_yaml(goal_list, driver_config):
 def print_status():
 	# if it isn't the goal element of list
 	rospy.loginfo("Goal reached:"+str(mat[current_goal]))
-	if(not current_goal == final_goal):
-		if(print_option == "all" or print_option == "local"):
-			# print time duration of current task
-			rospy.loginfo("Current task duration:"+str(time.time() - current_task_start)+"s")
+	if(print_option == "all" or print_option == "local"):
+		# print time duration of current task
+		rospy.loginfo("Current task duration:"+str(time.time() - current_task_start)+"s")
 	# if it is the last goal
-	else:
-		if(print_option == "all" or print_option == "total"):
-			rospy.loginfo("Total distance traveled is:"+str(dist)+"m")
-			rospy.loginfo("Total time traveled is:"+str(time.time() - time_start)+"s")
+	if(current_goal == final_goal and (print_option == "all" or print_option == "total")):
+		rospy.loginfo("Total distance traveled is:"+str(dist)+"m")
+		rospy.loginfo("Total time traveled is:"+str(time.time() - time_start)+"s")
 
 # callback function of odom subscriber
 def odom_callback(odometry):
@@ -136,9 +134,12 @@ if __name__ == '__main__':
 	global client
 	global current_goal
 	global final_goal
+
 	first_goal = 0
 	current_goal = -1
 	printed_once = True
+	time_waited = 0
+	time_send_goal = None
 
 	# initialization of node, client and servers
 	rospy.init_node('goal_sequence_driver')
@@ -163,18 +164,20 @@ if __name__ == '__main__':
 		rospy.loginfo("goal_sequence_driver is not responding to any request.")
 		cmd = None
 		goal_sequence_driver_run(cmd)
-	# initialization finished
+	# initialization done
 	# loop of goal_sequence_driver below:
 	while(not rospy.is_shutdown()):
 		# send goal one by one, on condition:
 			# 1) the robot is not busy
 			# 2) or waited for too long
 			# 3) and user called service "run"
-		if not(client.get_state() == goal_status.PENDING or client.get_state() == goal_status.ACTIVE) and SERVICE_REQ:
+		if (not(client.get_state() == goal_status.PENDING or client.get_state() == goal_status.ACTIVE) or time_waited > patience) and SERVICE_REQ:
 			# if there's any unprinted but reached goal, print its pose information and time duration of task
-			if(not printed_once):
+			if(client.get_state() == goal_status.SUCCEEDED and not printed_once):
 				print_status()
 				printed_once = True
+			elif(time_waited > patience and not printed_once):
+				rospy.loginfo("Time is up, going to next goal.")
 			# if it hasn't reached the final goal, or waited too long, then go to next goal
 			if(not current_goal == final_goal):
 				current_goal += 1
@@ -183,15 +186,18 @@ if __name__ == '__main__':
 				# if infi_param set to True, start the loop again from 1st goal
 				if(infi_param):
 					current_goal = first_goal
-				# if not, don't send goal anymore
+				# if not, it doesn't send goal anymore
 				else:
 					SERVICE_REQ = False
 			# drive the robot to the current_goal
 			client.send_goal(create_goal(mat[current_goal]))
+			time_send_goal = time.time()
 			# the current_goal is not printed yet
-			printed_once = False
-		#################################
-		# add your own functions below: #
-		#################################
-
+			if(SERVICE_REQ):
+				printed_once = False
+		if(time_send_goal and SERVICE_REQ):
+			time_waited = time.time() - time_send_goal
+		###############################
+		# add your own functions here #
+		###############################
 		rate.sleep()
