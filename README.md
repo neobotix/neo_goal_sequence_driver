@@ -10,7 +10,7 @@
 3. For testing, please:
 	
 	1) run .../neo_simulation/simulation.launch;
-	2) run .../neo_goal_sequence_driver/launch/neo_goal_sequence_driver_server.launch;
+	2) run .../neo_goal_sequence_driver/launch/neo_goal_sequence_driver_server_visualized.launch;
 	   (The robot should be standing by.)
 	3) call: 
 		    rosservice call /goal_sequence_driver_run
