@@ -1,10 +1,11 @@
 # neo_goal_sequence_driver
 
-## It's a package for testing basic functionalities of navigation stack.
+## Package for testing basic functionalities of navigation stack.
 
-If the node is correctly set up, in rviz it looks like:
-	![image](https://github.com/Hezihao/neo_goal_sequence_driver/blob/master/IMG/example_sequence_driver.png)
+<p align="center">
+  <img src="img/example_sequence_driver.png"  width=350>
+</p>
 
-In the picture above a default goal list with 4 goals is visualized and the goal_sequence_driver is ready to drive.
+Example setup with our [Simulation](https://github.com/neobotix/neo_simulation) and 4 different goals visualized in Rviz.
 
-Please find our documentations in https://docs.neobotix.de/display/TUT/Using+neo_goal_sequence_driver
+Please find our documentations [here](https://docs.neobotix.de/display/TUT/Using+neo_goal_sequence_driver).
