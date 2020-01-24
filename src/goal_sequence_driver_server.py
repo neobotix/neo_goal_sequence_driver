@@ -147,9 +147,9 @@ if __name__ == '__main__':
 
 	# initialization of node, client and servers
 	rospy.init_node('goal_sequence_driver')
-	odom_sub = rospy.Subscriber("odom", Odometry, odom_callback)
-	client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+	odom_sub = rospy.Subscriber("/odom", Odometry, odom_callback)
 
+	client = actionlib.SimpleActionClient('/move_base', MoveBaseAction)
 	if(client.wait_for_server()):
 		rospy.loginfo("Action client server up.")
 
