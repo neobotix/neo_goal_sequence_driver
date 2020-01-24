@@ -52,36 +52,39 @@ def load_from_yaml(goal_list, driver_config):
 	global patience
 	global infi_param
 	global print_option
+
 	# read goal list and configuration from .yaml file
 	file = open(goal_list, 'r')
 	goals = yaml.load(file, Loader=yaml.SafeLoader)
 	file = open(driver_config, 'r')
 	config_params = yaml.load(file, Loader=yaml.SafeLoader)
+
 	mat = []
 	for goal in goals:
-		row = [goals[goal]['X'], goals[goal]['Y'], goals[goal]['theta']]
+		row = [goal['X'], goal['Y'], goal['theta']]
 		mat.append(row)
 	rospy.loginfo("\nGoal list read:")
 	for vec in mat:
 		print(vec)
+
 	print_option = config_params['config_parameters']['print_option']
 	infi_param = config_params['config_parameters']['infi_param']
 	patience = config_params['config_parameters']['patience']
-	print("print_option is:"+print_option)
-	print("infi_param is:"+str(infi_param))
-	print("patience is:"+str(patience))
+	print("print_option is: "+print_option)
+	print("infi_param is: "+str(infi_param))
+	print("patience is: "+str(patience))
 
 # printing current status
 def print_status():
 	# if it isn't the goal element of list
-	rospy.loginfo("Goal reached:"+str(mat[current_goal]))
+	rospy.loginfo("Goal reached: "+str(mat[current_goal]))
 	if(print_option == "all" or print_option == "local"):
 		# print time duration of current task
-		rospy.loginfo("Current task duration:"+str(time.time() - current_task_start)+"s")
+		rospy.loginfo("Current task duration: "+str(time.time() - current_task_start)+"s")
 	# if it is the last goal
 	if(current_goal == final_goal and (print_option == "all" or print_option == "total")):
-		rospy.loginfo("Total distance traveled is:"+str(dist)+"m")
-		rospy.loginfo("Total time traveled is:"+str(time.time() - time_start)+"s")
+		rospy.loginfo("Total distance traveled is: "+str(dist)+"m")
+		rospy.loginfo("Total time traveled is: "+str(time.time() - time_start)+"s")
 
 # callback function of odom subscriber
 def odom_callback(odometry):
@@ -114,6 +117,7 @@ def goal_sequence_driver_run(cmd):
 		SERVICE_REQ = True
 		current_goal = -1
 		current_task_start = time.time()
+		rospy.loginfo("Task started: infi_param=" + str(infi_param))
 		return "Service requested."
 
 # callback function of service stop
@@ -124,6 +128,7 @@ def goal_sequence_driver_stop(cmd):
 	if(SERVICE_REQ):
 		SERVICE_REQ = False
 		client.cancel_all_goals()
+		rospy.loginfo("Stopped!")
 		return "Shut down."
 	else:
 		return "goal_sequence_driver is not running."
@@ -139,25 +144,27 @@ if __name__ == '__main__':
 	current_goal = -1
 	printed_once = True
 	time_waited = 0
-	time_send_goal = None
+	time_send_goal = 0
 
 	# initialization of node, client and servers
 	rospy.init_node('goal_sequence_driver')
 	odom_sub = rospy.Subscriber("odom", Odometry, odom_callback)
-	rospy.loginfo("Odometer is up.")
 	client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+
 	if(client.wait_for_server()):
 		rospy.loginfo("Action client server up.")
+
 	load_from_yaml(goal_list, driver_config)	# load configuration params & goals from .yaml
 	final_goal = np.shape(mat)[0] - 1			# get the max index of goal list
 	time_start = time.time()					# record the time of starting server
 	rate = rospy.Rate(5)
+
 	# in the service_called mode, servers would be initialized
-	# run "rosservice call /goal_sequence_driver_run" 	to start the drive
-	# run "rosservice call /goal_sequence_driver_stop" 	to stop
+	# run "rosservice call /goal_sequence_driver/run" 	to start the drive
+	# run "rosservice call /goal_sequence_driver/stop" 	to stop
 	if(service_called):
-		server = rospy.Service('goal_sequence_driver_run', command, goal_sequence_driver_run)
-		server_stop = rospy.Service('goal_sequence_driver_stop', command, goal_sequence_driver_stop)
+		server = rospy.Service('run', command, goal_sequence_driver_run)
+		server_stop = rospy.Service('stop', command, goal_sequence_driver_stop)
 		rospy.loginfo("goal_sequence_driver server ready.")
 	# when not called by service, no server needed
 	else:
@@ -167,16 +174,16 @@ if __name__ == '__main__':
 	# initialization done
 	# loop of goal_sequence_driver below:
 	while(not rospy.is_shutdown()):
+		time_waited = time.time() - time_send_goal
 		# send goal one by one, on condition:
 			# 1) the robot is not busy
 			# 2) or waited for too long
 			# 3) and user called service "run"
 		if SERVICE_REQ and (not(client.get_state() == goal_status.PENDING or client.get_state() == goal_status.ACTIVE) or time_waited > patience):
 			# if there's any unprinted but reached goal, print its pose information and time duration of task
-			if(client.get_state() == goal_status.SUCCEEDED and not printed_once):
+			if(client.get_state() == goal_status.SUCCEEDED):
 				print_status()
-				printed_once = True
-			elif(time_waited > patience and not printed_once):
+			elif(current_goal >= 0 and time_waited > patience):
 				rospy.loginfo("Time is up, going to next goal.")
 			# if it hasn't reached the final goal, or waited too long, then go to next goal
 			if(not current_goal == final_goal):
@@ -189,14 +196,11 @@ if __name__ == '__main__':
 				# if not, it doesn't send goal anymore
 				else:
 					SERVICE_REQ = False
+					continue
 			# drive the robot to the current_goal
 			client.send_goal(create_goal(mat[current_goal]))
+			rospy.loginfo("Sent goal " + str(current_goal) + ": " + str(mat[current_goal]))
 			time_send_goal = time.time()
-			# the current_goal is not printed yet
-			if(SERVICE_REQ):
-				printed_once = False
-		if(time_send_goal and SERVICE_REQ):
-			time_waited = time.time() - time_send_goal
 		###############################
 		# add your own functions here #
 		###############################

@@ -15,8 +15,8 @@ def init_goal_sequence_visualizer(mat):
 	server.load_from_yaml(server.goal_list, server.driver_config)
 	rospy.init_node('neo_goal_sequence_visualizer')
 	rate = rospy.Rate(0.5)
-	pub = rospy.Publisher('/neo_goal_sequence_visualizer', PoseArray, queue_size=1)
-	pub_txt = rospy.Publisher('/neo_goal_sequence_visualizer/Marker', MarkerArray, queue_size=1)
+	pub = rospy.Publisher('pose_array', PoseArray, queue_size=1)
+	pub_txt = rospy.Publisher('marker_array', MarkerArray, queue_size=1)
 	pose_array = PoseArray()
 	pose_array.header.seq = 1
 	pose_array.header.frame_id = "/map"
