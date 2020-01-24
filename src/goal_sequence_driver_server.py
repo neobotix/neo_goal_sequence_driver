@@ -171,7 +171,7 @@ if __name__ == '__main__':
 			# 1) the robot is not busy
 			# 2) or waited for too long
 			# 3) and user called service "run"
-		if (not(client.get_state() == goal_status.PENDING or client.get_state() == goal_status.ACTIVE) or time_waited > patience) and SERVICE_REQ:
+		if SERVICE_REQ and (not(client.get_state() == goal_status.PENDING or client.get_state() == goal_status.ACTIVE) or time_waited > patience):
 			# if there's any unprinted but reached goal, print its pose information and time duration of task
 			if(client.get_state() == goal_status.SUCCEEDED and not printed_once):
 				print_status()
