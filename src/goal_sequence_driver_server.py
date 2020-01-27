@@ -172,6 +172,7 @@ if __name__ == '__main__':
 		cmd = None
 		goal_sequence_driver_run(cmd)
 	# initialization done
+
 	# loop of goal_sequence_driver below:
 	while(not rospy.is_shutdown()):
 		time_waited = time.time() - time_send_goal
@@ -181,10 +182,11 @@ if __name__ == '__main__':
 			# 3) and user called service "run"
 		if SERVICE_REQ and (not(client.get_state() == goal_status.PENDING or client.get_state() == goal_status.ACTIVE) or time_waited > patience):
 			# if there's any unprinted but reached goal, print its pose information and time duration of task
-			if(client.get_state() == goal_status.SUCCEEDED):
-				print_status()
-			elif(current_goal >= 0 and time_waited > patience):
-				rospy.loginfo("Time is up, going to next goal.")
+			if(current_goal >= 0):
+				if(client.get_state() == goal_status.SUCCEEDED):
+					print_status()
+				elif(time_waited > patience):
+					rospy.loginfo("Time is up, going to next goal.")
 			# if it hasn't reached the final goal, or waited too long, then go to next goal
 			if(not current_goal == final_goal):
 				current_goal += 1
@@ -195,6 +197,7 @@ if __name__ == '__main__':
 					current_goal = first_goal
 				# if not, it doesn't send goal anymore
 				else:
+					current_goal = -1
 					SERVICE_REQ = False
 					continue
 			# drive the robot to the current_goal
