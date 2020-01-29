@@ -114,10 +114,10 @@ def goal_sequence_driver_run(cmd):
 	if(SERVICE_REQ):
 		return "goal_sequence_driver is already running."
 	else:
-		SERVICE_REQ = True
 		current_goal = -1
+		SERVICE_REQ = True
 		current_task_start = time.time()
-		rospy.loginfo("Task started: infi_param=" + str(infi_param))
+		rospy.loginfo("Task started: infi_param = " + str(infi_param))
 		return "Service requested."
 
 # callback function of service stop
@@ -127,8 +127,7 @@ def goal_sequence_driver_stop(cmd):
 
 	if(SERVICE_REQ):
 		SERVICE_REQ = False
-		client.cancel_all_goals()
-		rospy.loginfo("Stopped!")
+		rospy.loginfo("Stopping ...")
 		return "Shut down."
 	else:
 		return "goal_sequence_driver is not running."
@@ -176,6 +175,13 @@ if __name__ == '__main__':
 	# loop of goal_sequence_driver below:
 	while(not rospy.is_shutdown()):
 		time_waited = time.time() - time_send_goal
+
+		# check if we need to cancel current goal
+		if not SERVICE_REQ and current_goal >= 0:
+			client.cancel_all_goals()
+			current_goal = -1
+			rospy.loginfo("Cancelled all goals.")
+
 		# send goal one by one, on condition:
 			# 1) the robot is not busy
 			# 2) or waited for too long
