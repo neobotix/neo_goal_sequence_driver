@@ -187,6 +187,8 @@ if __name__ == '__main__':
 					print_status()
 				elif(time_waited > patience):
 					rospy.loginfo("Time is up, going to next goal.")
+				else:
+					rospy.logerr("Goal failed: state=" + str(client.get_state()))
 			# if it hasn't reached the final goal, or waited too long, then go to next goal
 			if(not current_goal == final_goal):
 				current_goal += 1
