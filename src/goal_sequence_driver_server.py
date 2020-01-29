@@ -186,32 +186,38 @@ if __name__ == '__main__':
 			# 1) the robot is not busy
 			# 2) or waited for too long
 			# 3) and user called service "run"
-		if SERVICE_REQ and (not(client.get_state() == goal_status.PENDING or client.get_state() == goal_status.ACTIVE) or time_waited > patience):
-			# if there's any unprinted but reached goal, print its pose information and time duration of task
-			if(current_goal >= 0):
-				if(client.get_state() == goal_status.SUCCEEDED):
-					print_status()
-				elif(time_waited > patience):
-					rospy.loginfo("Time is up, going to next goal.")
+		if SERVICE_REQ:
+			# get current goal state
+			state = client.get_state()
+			# check if we need to do something in this cycle
+			if not(state == goal_status.PENDING or state == goal_status.ACTIVE) or time_waited > patience:
+				# if there's any unprinted but reached goal, print its pose information and time duration of task
+				if(current_goal >= 0):
+					if(state == goal_status.SUCCEEDED):
+						print_status()
+					elif(time_waited > patience):
+						rospy.logwarn("Time is up, going to next goal.")
+					else:
+						rospy.logerr("Goal failed: state = " + str(state))
+						rospy.sleep(1)
+				# if it hasn't reached the final goal, or waited too long, then go to next goal
+				if(not current_goal == final_goal):
+					current_goal += 1
+				# if it's already the final goal
 				else:
-					rospy.logerr("Goal failed: state=" + str(client.get_state()))
-			# if it hasn't reached the final goal, or waited too long, then go to next goal
-			if(not current_goal == final_goal):
-				current_goal += 1
-			# if it's already the final goal
-			else:
-				# if infi_param set to True, start the loop again from 1st goal
-				if(infi_param):
-					current_goal = first_goal
-				# if not, it doesn't send goal anymore
-				else:
-					current_goal = -1
-					SERVICE_REQ = False
-					continue
-			# drive the robot to the current_goal
-			client.send_goal(create_goal(mat[current_goal]))
-			rospy.loginfo("Sent goal " + str(current_goal) + ": " + str(mat[current_goal]))
-			time_send_goal = time.time()
+					# if infi_param set to True, start the loop again from 1st goal
+					if(infi_param):
+						current_goal = first_goal
+					# if not, it doesn't send goal anymore
+					else:
+						current_goal = -1
+						SERVICE_REQ = False
+						continue
+				# drive the robot to the current_goal
+				client.send_goal(create_goal(mat[current_goal]))
+				rospy.loginfo("Sent goal " + str(current_goal) + ": " + str(mat[current_goal]))
+				time_send_goal = time.time()
+
 		###############################
 		# add your own functions here #
 		###############################
