@@ -51,6 +51,7 @@ def load_from_yaml(goal_list, driver_config):
 	global mat
 	global patience
 	global infi_param
+	global manual_stepping
 	global print_option
 
 	# read goal list and configuration from .yaml file
@@ -69,6 +70,7 @@ def load_from_yaml(goal_list, driver_config):
 
 	print_option = config_params['config_parameters']['print_option']
 	infi_param = config_params['config_parameters']['infi_param']
+	manual_stepping = config_params['config_parameters']['manual_stepping']
 	patience = config_params['config_parameters']['patience']
 	print("print_option is: "+print_option)
 	print("infi_param is: "+str(infi_param))
@@ -132,6 +134,20 @@ def goal_sequence_driver_stop(cmd):
 	else:
 		return "goal_sequence_driver is not running."
 
+# callback function of service next
+def goal_sequence_driver_next(cmd):
+
+	global client
+	global current_task_start
+	global SERVICE_REQ
+
+	if(SERVICE_REQ):
+		SERVICE_REQ = False
+		client.cancel_all_goals()
+	SERVICE_REQ = True
+	current_task_start = time.time()
+	return "Sent next goal."
+
 if __name__ == '__main__':
 
 	global time_start
@@ -141,7 +157,7 @@ if __name__ == '__main__':
 
 	first_goal = 0
 	current_goal = -1
-	printed_once = True
+	goal_reached = False
 	time_waited = 0
 	time_send_goal = 0
 
@@ -164,6 +180,7 @@ if __name__ == '__main__':
 	if(service_called):
 		server = rospy.Service('run', command, goal_sequence_driver_run)
 		server_stop = rospy.Service('stop', command, goal_sequence_driver_stop)
+		server_next = rospy.Service('next', command, goal_sequence_driver_next)
 		rospy.loginfo("goal_sequence_driver server ready.")
 	# when not called by service, no server needed
 	else:
@@ -177,7 +194,7 @@ if __name__ == '__main__':
 		time_waited = time.time() - time_send_goal
 
 		# check if we need to cancel current goal
-		if not SERVICE_REQ and current_goal >= 0:
+		if not SERVICE_REQ and not goal_reached and current_goal >= 0:
 			client.cancel_all_goals()
 			current_goal = -1
 			rospy.loginfo("Cancelled all goals.")
@@ -194,14 +211,20 @@ if __name__ == '__main__':
 				# if there's any unprinted but reached goal, print its pose information and time duration of task
 				if(current_goal >= 0):
 					if(state == goal_status.SUCCEEDED):
-						print_status()
+						if(not goal_reached):
+							print_status()
+							goal_reached = True
+							# in manual stepping mode we stop now and wait for next command
+							if(manual_stepping):
+								SERVICE_REQ = False
+								continue
 					elif(time_waited > patience):
 						rospy.logwarn("Time is up, going to next goal.")
 					else:
 						rospy.logerr("Goal failed: state = " + str(state))
 						rospy.sleep(1)
 				# if it hasn't reached the final goal, or waited too long, then go to next goal
-				if(not current_goal == final_goal):
+				if(current_goal < final_goal):
 					current_goal += 1
 				# if it's already the final goal
 				else:
@@ -214,9 +237,11 @@ if __name__ == '__main__':
 						SERVICE_REQ = False
 						continue
 				# drive the robot to the current_goal
-				client.send_goal(create_goal(mat[current_goal]))
-				rospy.loginfo("Sent goal " + str(current_goal) + ": " + str(mat[current_goal]))
-				time_send_goal = time.time()
+				if(current_goal >= 0 and current_goal <= final_goal):
+					client.send_goal(create_goal(mat[current_goal]))
+					rospy.loginfo("Sent goal " + str(current_goal) + ": " + str(mat[current_goal]))
+					time_send_goal = time.time()
+					goal_reached = False
 
 		###############################
 		# add your own functions here #
