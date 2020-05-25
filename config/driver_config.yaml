@@ -1,4 +1,5 @@
 config_parameters:
   print_option: all     # optional: local/total/all
   infi_param: false     # optional: true/false, when set to true: robot will repeat the goal list
+  manual_stepping: false       # if to require calling /next for each goal
   patience: 30         # time length wait for response of actionserver
