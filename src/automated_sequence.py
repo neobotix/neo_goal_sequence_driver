@@ -27,6 +27,7 @@ class AutomatedGoal:
 		self.launch = False
 		self.n_poses = n_poses # Support variable for publishing the pose arrays
 		self.n_goals = n_poses # Support variable for logging
+		self.data = []
 
 	def GoalCB(self,data):
 		self.goal_list.append([data])
@@ -50,12 +51,18 @@ class AutomatedGoal:
 			self.n_goals = self.n_goals-1
 
 		if(self.launch):
-			data = [{'X': self.goal_list[0][0].pose.position.x, 'Y': self.goal_list[0][0].pose.position.y, 'theta': self.goal_list[0][0].pose.orientation.z}, \
-			 {'X': self.goal_list[1][0].pose.position.x, 'Y': self.goal_list[1][0].pose.position.y, 'theta': self.goal_list[1][0].pose.orientation.z}, \
-			 {'X': self.goal_list[2][0].pose.position.x, 'Y': self.goal_list[2][0].pose.position.y, 'theta': self.goal_list[2][0].pose.orientation.z}]
+			for i in range(0, len(self.goal_list)):
+				self.data.append([{'X': self.goal_list[i][0].pose.position.x, \
+					'Y': self.goal_list[i][0].pose.position.y,\
+					'theta': self.goal_list[i][0].pose.orientation.z}, 
+			])
+				
+				
 			with open(goal_list, 'w') as outfile:
-				yaml.dump(data, outfile, default_flow_style=False)
-			os.system("roslaunch neo_simulation mpo_500_move_base.launch")
+				for i in range(0, len(self.goal_list)):
+					yaml.dump(self.data[i], outfile, default_flow_style=False)
+
+			os.system("roslaunch neo_simulation mpo_500_move_base.launch") # Launching move base after the markers are published
 
 
 if __name__ == '__main__':
@@ -66,4 +73,4 @@ if __name__ == '__main__':
 	rospy.loginfo("Please select %i poses", n_poses)
 	rospy.loginfo("%i goals are left", n_poses)
 	while(not rospy.is_shutdown()):
-		rate.sleep()
+		rate.sleep() #Publishing at 100 Hz
