@@ -62,7 +62,7 @@ def load_from_yaml(goal_list, driver_config):
 
 	mat = []
 	for goal in goals:
-		row = [goal['X'], goal['Y'], goal['theta']]
+		row = [goal[0]['X'], goal[0]['Y'], goal[0]['theta']]
 		mat.append(row)
 	rospy.loginfo("\nGoal list read:")
 	for vec in mat:
