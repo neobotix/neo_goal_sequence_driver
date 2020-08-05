@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+
+<launch>
+	<node pkg="neo_goal_sequence_driver" type="automated_sequence.py" ns="goal_sequence_driver" name="neo_goal_sequence_driver_automated" output="screen"/>
+</launch>

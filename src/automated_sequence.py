@@ -2,10 +2,11 @@
 import rospy
 import numpy as np
 from geometry_msgs.msg import Pose, PoseStamped, PoseArray
-from tf.transformations import quaternion_from_euler
+from tf.transformations import euler_from_quaternion
 import roslaunch
 import yaml
 import rospkg
+
 
 # Accessing the goal list
 rospack = rospkg.RosPack()
@@ -35,17 +36,19 @@ class AutomatedGoal:
 		self.pose = Pose()
 		self.pose.position.x = data.pose.position.x
 		self.pose.position.y = data.pose.position.y
-		self.pose.position.z = data.pose.orientation.z
+		self.pose.position.z = data.pose.position.z
 		self.pose.orientation.x = data.pose.orientation.x
 		self.pose.orientation.y = data.pose.orientation.y
 		self.pose.orientation.z = data.pose.orientation.z
 		self.pose.orientation.w = data.pose.orientation.w
+		quaternion = (self.pose.orientation.x,self.pose.orientation.y,self.pose.orientation.z,self.pose.orientation.w)
+		theta = np.degrees(euler_from_quaternion(quaternion))
 		self.pose_array.poses.append(self.pose)
 		self.pub_marker.publish(self.pose_array)
-		self.data.append([{'X': data.pose.position.x, \
-					'Y': data.pose.position.y,\
-					'theta': data.pose.orientation.z}, 
-			])
+		self.data.append({'X': round(data.pose.position.x,4), \
+					'Y': round(data.pose.position.y,4),\
+					'theta': round(theta[2],4)}, 
+			)
 		self.seq = self.seq+1
 		with open(goal_list, 'w') as outfile:
 			yaml.dump(self.data, outfile, default_flow_style=False)
