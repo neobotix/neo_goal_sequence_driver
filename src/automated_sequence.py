@@ -42,10 +42,10 @@ class AutomatedGoal:
 		self.pose.orientation.w = data.pose.orientation.w
 		self.pose_array.poses.append(self.pose)
 		self.pub_marker.publish(self.pose_array)
-		self.data.append([{'X': data.pose.position.x, \
+		self.data.append({'X': data.pose.position.x, \
 					'Y': data.pose.position.y,\
 					'theta': data.pose.orientation.z}, 
-			])
+			)
 		self.seq = self.seq+1
 		with open(goal_list, 'w') as outfile:
 			yaml.dump(self.data, outfile, default_flow_style=False)
