@@ -37,7 +37,6 @@ def init_goal_sequence_visualizer(mat):
 		pose_array.poses.append(pose)
 		marker.header.frame_id = "map"
 		marker.header.seq = i
-		marker.ns = ""
 		marker.id = i
 		marker.type = marker.TEXT_VIEW_FACING
 		marker.action = marker.ADD
