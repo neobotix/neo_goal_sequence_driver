@@ -19,7 +19,7 @@ def init_goal_sequence_visualizer(mat):
 	pub_txt = rospy.Publisher('marker_array', MarkerArray, queue_size=1)
 	pose_array = PoseArray()
 	pose_array.header.seq = 1
-	pose_array.header.frame_id = "/map"
+	pose_array.header.frame_id = "map"
 	marker_array = MarkerArray()
 	i = 1
 	for vec in mat:
@@ -35,8 +35,9 @@ def init_goal_sequence_visualizer(mat):
 		pose.orientation.z = quaternion[2]
 		pose.orientation.w = quaternion[3]
 		pose_array.poses.append(pose)
-		marker.header.frame_id = "/map"
+		marker.header.frame_id = "map"
 		marker.header.seq = i
+		marker.ns = ""
 		marker.id = i
 		marker.type = marker.TEXT_VIEW_FACING
 		marker.action = marker.ADD

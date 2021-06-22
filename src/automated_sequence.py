@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import numpy as np
 from geometry_msgs.msg import Pose, PoseStamped, PoseArray
@@ -22,7 +22,7 @@ class AutomatedGoal:
 		self.pose = Pose()
 		self.pose_array = PoseArray()
 		self.pose_array.header.seq = 1
-		self.pose_array.header.frame_id = "/map"
+		self.pose_array.header.frame_id = "map"
 		self.pub_marker = rospy.Publisher('pose_array', PoseArray, queue_size=1)
 		self.data = [] 
 		self.seq = 1 #Keeps a track of no of goals 
@@ -47,7 +47,7 @@ class AutomatedGoal:
 		self.pub_marker.publish(self.pose_array)
 		self.data.append({'X': round(data.pose.position.x,4), \
 					'Y': round(data.pose.position.y,4),\
-					'theta': round(theta[2],4)}, 
+					'theta': round(float(theta[2]),4)}, 
 			)
 		self.seq = self.seq+1
 		with open(goal_list, 'w') as outfile:
